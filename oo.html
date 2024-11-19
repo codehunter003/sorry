@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sara and Aishik Chase Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #intro-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url("cover.jpeg") center/cover no-repeat;
+        }
+
+        #intro-container .start-button {
+            padding: 15px 30px;
+            font-size: 24px;
+            cursor: pointer;
+            background-color: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        #intro-container .start-button:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        #game-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background: url("ff.jpg") center/cover;
+        }
+
+        #boy, #girl {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: relative;
+        }
+
+        .name-label {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-family: 'Arial Rounded MT Bold', Arial;
+            font-size: 12px;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 2;
+        }
+
+        #bucket {
+            position: absolute;
+            bottom: 20px;
+            width: 100px;
+            height: 80px;
+            transition: left 0.5s ease-out;
+            z-index: 1;
+        }
+
+        #bucket-image {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            object-fit: contain;
+        }
+
+        #water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #00CED1 0%, #4169E1 100%);
+            transition: height 0.5s;
+            border-radius: 0 0 16px 16px;
+            opacity: 0.8;
+        }
+
+        .water-overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                0deg,
+                rgba(255,255,255,0.2) 0%,
+                transparent 50%,
+                rgba(255,255,255,0.2) 100%
+            );
+            border-radius: 0 0 16px 16px;
+        }
+
+        .tear {
+            position: absolute;
+            width: 8px;
+            height: 12px;
+            background: linear-gradient(180deg, #87CEEB, #00CED1);
+            border-radius: 50%;
+            animation: fallTear 1.5s cubic-bezier(0.4, 0, 1, 1);
+            transform-origin: center;
+            z-index: 1;
+        }
+
+        @keyframes fallTear {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0.9;
+            }
+            50% {
+                transform: translateY(150px) scale(0.8);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(300px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        .splash {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            animation: splash 0.5s ease-out;
+            opacity: 0;
+            z-index: 2;
+        }
+
+        @keyframes splash {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-family: 'Arial Rounded MT Bold', Arial;
+            font-size: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+
+        .sorry-message {
+            position: absolute;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-family: 'Arial Rounded MT Bold', Arial;
+            font-size: 14px;
+            color: #333;
+            animation: fadeOut 2s forwards;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 3;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(-10px); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="intro-container">
+        <button class="start-button">Start Game</button>
+    </div>
+
+    <div id="game-container">
+        <div id="score">Catches: 0</div>
+
+        <div id="boy">
+            <div class="name-label">Aishik</div>
+            <img src="boy.gif" alt="Aishik" class="character-img">
+        </div>
+
+        <div id="girl">
+            <div class="name-label">Sara</div>
+            <img src="gurl.gif" alt="Sara" class="character-img">
+        </div>
+
+        <div id="bucket">
+            <img src="/api/placeholder/100/80" alt="Bucket" id="bucket-image">
+            <div id="water">
+                <div class="water-overlay"></div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        const boy = document.getElementById('boy');
+        const girl = document.getElementById('girl');
+        const bucket = document.getElementById('bucket');
+        const water = document.getElementById('water');
+        const scoreElement = document.getElementById('score');
+        const gameContainer = document.getElementById('game-container');
+        const introContainer = document.getElementById('intro-container');
+        const startButton = document.querySelector('.start-button');
+
+        let catches = 0;
+        let waterLevel = 0;
+
+        const catchSound = new Audio("ilu.mp3");
+        const bgMusic = new Audio("al.mp3");
+
+        const sorryMessages = [
+            "I'm sorry Sara! 😢",
+            "Please forgive me! 😭",
+            "Won't do it again Sara! 🥺",
+            "Really sorry! 😔",
+            "I'll be good now! 😢"
+        ];
+
+        startButton.addEventListener('click', () => {
+            bgMusic.loop = true;
+            bgMusic.play();
+            introContainer.style.display = 'none';
+            gameContainer.style.display = 'block';
+        });
+
+        bucket.style.left = '50%';
+        bucket.style.transform = 'translateX(-50%)';
+
+        boy.style.left = '50%';
+        boy.style.top = '50%';
+        girl.style.left = '20%';
+        girl.style.top = '20%';
+
+        setInterval(() => {
+            if (!boy.classList.contains('caught')) {
+                const x = Math.random() * (window.innerWidth - 80);
+                const y = Math.random() * (window.innerHeight - 100);
+                boy.style.left = x + 'px';
+                boy.style.top = y + 'px';
+            }
+        }, 2000);
+
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX - 40;
+            const y = e.clientY - 50;
+            girl.style.left = x + 'px';
+            girl.style.top = y + 'px';
+
+            const boyRect = boy.getBoundingClientRect();
+            const girlRect = girl.getBoundingClientRect();
+
+            if (isColliding(boyRect, girlRect) && !boy.classList.contains('caught')) {
+                caught();
+            }
+        });
+
+        function isColliding(rect1, rect2) {
+            return !(rect1.right < rect2.left ||
+                    rect1.left > rect2.right ||
+                    rect1.bottom < rect2.top ||
+                    rect1.top > rect2.bottom);
+        }
+
+        function moveBucketToTear(tearX) {
+            const bucketWidth = bucket.offsetWidth;
+            const maxX = window.innerWidth - bucketWidth;
+            let newX = tearX - (bucketWidth / 2);
+            newX = Math.max(0, Math.min(newX, maxX));
+            
+            bucket.style.left = newX + 'px';
+            bucket.style.transform = 'none';
+        }
+
+        function showSorryMessage(x, y) {
+            const message = document.createElement('div');
+            message.className = 'sorry-message';
+            message.textContent = sorryMessages[Math.floor(Math.random() * sorryMessages.length)];
+            message.style.left = x + 'px';
+            message.style.top = (y - 40) + 'px';
+            gameContainer.appendChild(message);
+
+            message.addEventListener('animationend', () => {
+                message.remove();
+            });
+        }
+
+        function caught() {
+            boy.classList.add('caught');
+            catches++;
+            scoreElement.textContent = `Catches: ${catches}`;
+            
+            catchSound.currentTime = 0;
+            catchSound.play();
+            
+            const boyRect = boy.getBoundingClientRect();
+            showSorryMessage(boyRect.left, boyRect.top);
+
+            createTears();
+            
+            waterLevel += 5;
+            water.style.height = Math.min(waterLevel, 100) + '%';
+            
+            setTimeout(() => {
+                boy.classList.remove('caught');
+            }, 1000);
+        }
+
+        function createTears() {
+            const tears = 3;
+            
+            for (let i = 0; i < tears; i++) {
+                setTimeout(() => {
+                    const tear = document.createElement('div');
+                    tear.className = 'tear';
+                    const boyRect = boy.getBoundingClientRect();
+                    const tearX = boyRect.left + 40;
+                    tear.style.left = tearX + 'px';
+                    tear.style.top = (boyRect.top + 25) + 'px';
+                    
+                    moveBucketToTear(tearX);
+                    
+                    gameContainer.appendChild(tear);
+                    
+                    tear.addEventListener('animationend', () => {
+                        tear.remove();
+                    });
+                }, i * 200);
+            }
+        }
+    </script>
+</body>
+</html>
